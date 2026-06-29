@@ -14,8 +14,9 @@ venv/
 .env
 *.env.local
 
-# 向量库 & 运行时数据库（体积大，重建步骤见 README.md）
-backend/data/chroma_db/
+# 向量库 & 运行时数据库（体积大，重建步骤见 PLACEHOLDER.md / README.md）
+backend/data/chroma_db/*
+!backend/data/chroma_db/PLACEHOLDER.md
 backend/data/media/
 backend/data/db.sqlite3
 
