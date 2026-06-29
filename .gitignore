@@ -1,0 +1,41 @@
+# ============================================================
+# testdesign-platform .gitignore
+# ============================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.pyc
+venv/
+.venv/
+
+# 环境变量（含 API key，禁止提交）
+.env
+*.env.local
+
+# 向量库 & 运行时数据库（体积大，重建步骤见 README.md）
+backend/data/chroma_db/
+backend/data/media/
+backend/data/db.sqlite3
+
+# 备份目录
+backend.bak/
+*.bak
+
+# 向量库压缩包（走网盘传输，不入仓库）
+chroma_db_backup_*.tar.gz
+*.tar.gz
+backend/data/chroma_db_backup_*.tar.gz
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

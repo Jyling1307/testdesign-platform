@@ -1,0 +1,29 @@
+# Web framework
+fastapi>=0.115
+uvicorn[standard]>=0.34
+python-multipart>=0.0.18
+
+# ORM
+sqlalchemy>=2.0
+
+# AI/LLM
+langchain>=0.3
+langchain-anthropic>=0.2
+
+# Config
+pydantic-settings>=2.0
+python-dotenv>=1.0
+
+# Vector DB
+chromadb>=1.0
+
+# Embeddings
+openai>=1.60
+
+# Parsers
+python-docx>=1.1
+PyPDF2>=3.0
+openpyxl>=3.1
+
+# HTTP (rerank)
+requests>=2.28
