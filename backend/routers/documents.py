@@ -60,8 +60,8 @@ async def upload_document(project_id: int, file: UploadFile = File(...), db: Ses
 
     # Validate file type
     ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
-    if ext not in ('docx', 'pdf'):
-        raise HTTPException(400, '仅支持 .docx 和 .pdf 文件')
+    if ext not in ('docx', 'pdf', 'md'):
+        raise HTTPException(400, '仅支持 .docx、.pdf 和 .md 文件')
 
     # Save file
     file_dir = MEDIA_DIR / 'documents'
@@ -81,6 +81,17 @@ async def upload_document(project_id: int, file: UploadFile = File(...), db: Ses
     elif ext == 'pdf':
         from parsers.pdf_parser import parse_pdf
         raw_text, parsed_structure = parse_pdf(str(file_path))
+    elif ext == 'md':
+        # Markdown 解析：全文作 raw_text，按 # 标题层级产 parsed_structure
+        raw_text = content.decode('utf-8', errors='ignore')
+        parsed_structure = []
+        for line in raw_text.split('\n'):
+            stripped = line.strip()
+            if stripped.startswith('#'):
+                level = len(stripped) - len(stripped.lstrip('#'))
+                parsed_structure.append({'text': stripped, 'style': f'Heading{level}', 'level': level})
+            elif stripped:
+                parsed_structure.append({'text': stripped, 'style': 'Normal', 'level': 0})
 
     # Create DB record
     doc = Document(

@@ -44,7 +44,7 @@ function getStatusClass(status: string) {
         {{ store.uploading ? `上传中 ${store.uploadProgress}%` : '+ 上传文档' }}
       </button>
     </div>
-    <input ref="fileInput" type="file" accept=".docx,.pdf,.doc,.txt" style="display:none" @change="handleFile" />
+    <input ref="fileInput" type="file" accept=".docx,.pdf,.md" style="display:none" @change="handleFile" />
 
     <div v-if="store.documents.length === 0" class="empty">暂无文档，点击上方按钮上传</div>
     <div v-else class="doc-list">
