@@ -116,14 +116,32 @@ watch(() => store.ws.fullMarkdown, (newMd) => {
 
 async function createDesign() {
   if (!selectedDocId.value) return
-  await testDesignApi.create({ project: projectId.value, document: selectedDocId.value })
+  const { data } = await testDesignApi.create({ project_id: projectId.value, document_id: selectedDocId.value })
   showCreate.value = false
   selectedDocId.value = null
   await store.fetchDesigns(projectId.value)
+  // 自动选中新创建的 design，确保 store.current.id 有值
+  if (data?.id) await store.fetchDesign(data.id)
 }
 
 function selectDesign(id: number) {
   store.fetchDesign(id)
+}
+
+async function deleteCurrentDesign() {
+  console.log('[删除设计] store.current =', JSON.parse(JSON.stringify(store.current || {})))
+  const id = store.current?.id
+  if (!id) {
+    alert('当前设计信息不完整（id 缺失），请从左侧列表重新点选一个设计后再删除')
+    return
+  }
+  if (!confirm(`确认删除「${getDesignLabel(store.current)}」？关联的审阅记录、测试用例都会一并删除，不可恢复。`)) return
+  try {
+    await store.deleteDesign(id)
+    await store.fetchDesigns(projectId.value)
+  } catch (e: any) {
+    alert('删除失败: ' + (e.response?.data?.detail || e.message))
+  }
 }
 
 function getStatusLabel(status: string) {
@@ -297,13 +315,15 @@ async function submitReview() {
                 归入知识库
               </button>
               <span v-if="store.current.status === 'exported'" class="kb-done">已归库</span>
+              <button class="btn danger" @click="deleteCurrentDesign" :disabled="!store.current?.id">删除设计</button>
             </div>
           </div>
 
           <div class="toolbar">
-            <button class="btn btn-primary" @click="store.generateDesign(store.current!.id, true, '', selectedTypes)" :disabled="store.generating || store.ws.isGenerating || selectedTypes.length === 0">
+            <button class="btn btn-primary" @click="store.generateDesign(store.current!.id, true, '', selectedTypes)" :disabled="store.generating || selectedTypes.length === 0 || !store.current?.id">
               {{ store.ws.isGenerating ? '生成中...' : 'AI 生成' }}
             </button>
+            <span style="color:#888;font-size:0.7rem;margin-left:0.5rem;">[诊断 g={{Number(store.generating)}} t={{selectedTypes.length}} id={{store.current?.id ?? 'none'}} ws={{store.ws.status}}]</span>
             <div class="type-picker">
               <button class="btn" @click="showTypePicker = !showTypePicker" :class="{ active: showTypePicker }">
                 测试类型 {{ selectedTypes.length }}/{{ ALL_TEST_TYPES.length }}
@@ -544,6 +564,8 @@ const TreeNodeItem = defineComponent({
 .btn.sync-kb { border-color: #8b5cf6; color: #8b5cf6; }
 .btn.sync-kb:hover { background: rgba(139, 92, 246, 0.15); }
 .btn.sync-kb:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn.danger { border-color: #ef4444; color: #ef4444; }
+.btn.danger:hover { background: rgba(239, 68, 68, 0.15); }
 .kb-done { color: #10b981; font-size: 0.85rem; }
 .btn.active { border-color: #e94560; color: #e94560; }
 .card { background: #16213e; border: 1px solid #2a2a4a; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; }

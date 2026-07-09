@@ -1,9 +1,11 @@
+import asyncio
 import json
 import os
 import tempfile
 from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi.responses import StreamingResponse
 
 from config import DATA_DIR
 from schemas.knowledge import KnowledgeSearchRequest, KnowledgeSearchResult
@@ -11,16 +13,22 @@ from knowledge.embeddings import embed_query
 from knowledge.chroma_service import KnowledgeService, get_collection, get_chroma_client
 from rag.config import RAGConfig
 from rag.ingestion.ingest_service import ingest_file, ingest_directory
+from rag.ingestion.glossary import expand_query
+from llm.client import stream_chat
+from llm.prompts.knowledge_answer import SYSTEM_PROMPT, build_answer_prompt
 
 router = APIRouter(prefix='/api/knowledge', tags=['knowledge'])
 
 
 @router.post('/search/', response_model=list[KnowledgeSearchResult])
 def search_knowledge(req: KnowledgeSearchRequest):
-    query_embedding = embed_query(req.query)
+    # 术语扩展：把中文术语追加英文同义词（桶配额 → 桶配额 bucket quota），
+    # 让 embedding 跨语言匹配到代码图谱里的英文符号
+    expanded_query = expand_query(req.query)
+    query_embedding = embed_query(expanded_query)
     results = KnowledgeService.search(
         query_embedding,
-        query_text=req.query,
+        query_text=expanded_query,
         n_results=req.n_results,
         source_types=req.source_types or None,
         case_types=req.case_types or None,
@@ -41,6 +49,64 @@ def search_knowledge(req: KnowledgeSearchRequest):
         )
         for r in results
     ]
+
+
+@router.post('/ask/')
+async def ask_knowledge(req: KnowledgeSearchRequest):
+    """检索 + LLM 流式生成回答（SSE，打字机效果）。
+
+    事件流：
+    - {type: "results", results: [...]}   先推检索到的片段
+    - {type: "chunk", content: "..."}     LLM 回答增量（逐字）
+    - {type: "error", message: "..."}     LLM 生成失败
+    - {type: "done"}                      结束
+    """
+    async def event_stream():
+        # 1. 检索（同步 chroma 查询放线程里跑，避免阻塞 event loop）
+        def do_search():
+            expanded = expand_query(req.query)
+            q_emb = embed_query(expanded)
+            return KnowledgeService.search(
+                q_emb,
+                query_text=expanded,
+                n_results=req.n_results,
+                source_types=req.source_types or None,
+                case_types=req.case_types or None,
+                project=req.project or None,
+                collection_name=req.collection or None,
+                parent_doc=False,
+            )
+        results = await asyncio.to_thread(do_search)
+
+        snippets = [
+            {
+                'content': r['text'],
+                'source': r['metadata'].get('source_title', ''),
+                'source_type': r['metadata'].get('source_type', ''),
+                'heading': r['metadata'].get('heading', r['metadata'].get('heading_context', '')),
+                'collection': r['collection'],
+                'score': round(1 - r['distance'], 4),
+            }
+            for r in results
+        ]
+        yield f"data: {json.dumps({'type': 'results', 'results': snippets}, ensure_ascii=False)}\n\n"
+
+        # 2. LLM 流式生成回答
+        user_prompt = build_answer_prompt(req.query, snippets)
+        try:
+            async for chunk in stream_chat(SYSTEM_PROMPT, user_prompt, temperature=0.3):
+                yield f"data: {json.dumps({'type': 'chunk', 'content': chunk}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'LLM 生成失败: {e}'}, ensure_ascii=False)}\n\n"
+
+        # 3. 完成
+        yield f"data: {json.dumps({'type': 'done'}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type='text/event-stream',
+        headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'},
+    )
 
 
 # ============================================================

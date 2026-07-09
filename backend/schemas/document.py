@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -13,7 +14,7 @@ class DocumentResponse(BaseModel):
     file_size: int
     file_type: str
     raw_text: str
-    parsed_structure: dict
+    parsed_structure: Any  # list[{text, style, level}]，各 parser 均返回 list
     status: str
     created_at: datetime
 

@@ -23,6 +23,10 @@ export const useTestDesignStore = defineStore('testDesign', () => {
   async function fetchDesigns(projectId: number) {
     const { data } = await testDesignApi.list(projectId)
     designs.value = data
+    // current 指向的 design 可能已被删（如删文档时级联），不在新列表就清空
+    if (current.value && !data.some((d: any) => d.id === current.value!.id)) {
+      current.value = null
+    }
   }
 
   async function fetchDesign(id: number) {
@@ -74,5 +78,10 @@ export const useTestDesignStore = defineStore('testDesign', () => {
     }
   }
 
-  return { designs, current, generating, ws, fetchDesigns, fetchDesign, generateDesign, refineDesign }
+  async function deleteDesign(id: number) {
+    await testDesignApi.delete(id)
+    if (current.value?.id === id) current.value = null
+  }
+
+  return { designs, current, generating, ws, fetchDesigns, fetchDesign, generateDesign, refineDesign, deleteDesign }
 })

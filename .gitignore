@@ -19,6 +19,8 @@ backend/data/chroma_db/*
 !backend/data/chroma_db/PLACEHOLDER.md
 backend/data/media/
 backend/data/db.sqlite3
+backend/data/*.db
+frontend-dist/
 
 # 备份目录
 backend.bak/

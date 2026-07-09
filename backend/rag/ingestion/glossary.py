@@ -72,3 +72,49 @@ def extract_terms(text: str) -> list[str]:
         if alias_lower in lower:
             found.update(terms)
     return sorted(found)
+
+
+def expand_query(text: str) -> str:
+    """检索查询扩展：把中文术语追加其英文同义词，提升中英跨语言召回。
+
+    与 standardize（入库用，把英文统一成中文标准术语）相反，
+    expand_query 用于检索前，把"桶配额"扩成"桶配额 bucket quota"，
+    让 embedding 能同时匹配中文文档和英文代码符号。
+
+    优先匹配长 key（避免"桶配额"被"桶"和"配额"拆开重复追加）。
+    """
+    glossary = load_glossary()
+    if not glossary or not text:
+        return text
+
+    # 按 key 长度降序，优先匹配长术语（如"存储池"优先于"池"）
+    sorted_keys = sorted(glossary.keys(), key=len, reverse=True)
+    extras: list[str] = []
+    seen: set[str] = set()
+    consumed_spans: list[tuple[int, int]] = []  # 已匹配区间，避免重叠
+
+    for zh in sorted_keys:
+        info = glossary.get(zh) or {}
+        syns = info.get('synonyms', [])
+        if not syns:
+            continue
+        start = 0
+        while True:
+            idx = text.find(zh, start)
+            if idx < 0:
+                break
+            end = idx + len(zh)
+            # 检查是否与已匹配区间重叠
+            overlap = any(s < end and idx < e for s, e in consumed_spans)
+            if not overlap:
+                consumed_spans.append((idx, end))
+                for syn in syns:
+                    key = syn.lower()
+                    if key not in seen and key not in text.lower():
+                        seen.add(key)
+                        extras.append(syn)
+            start = end
+
+    if extras:
+        return f"{text} {' '.join(extras)}"
+    return text

@@ -1,0 +1,307 @@
+{
+  "桶": {
+    "synonyms": [
+      "bucket",
+      "bucket_quota"
+    ]
+  },
+  "配额": {
+    "synonyms": [
+      "quota"
+    ]
+  },
+  "对象": {
+    "synonyms": [
+      "object",
+      "object_storage"
+    ]
+  },
+  "网关": {
+    "synonyms": [
+      "gateway",
+      "object_gateway"
+    ]
+  },
+  "卷": {
+    "synonyms": [
+      "volume"
+    ]
+  },
+  "集群": {
+    "synonyms": [
+      "cluster",
+      "multi_cluster"
+    ]
+  },
+  "用户": {
+    "synonyms": [
+      "user",
+      "user_manage"
+    ]
+  },
+  "目录": {
+    "synonyms": [
+      "folder",
+      "sub_folder"
+    ]
+  },
+  "共享": {
+    "synonyms": [
+      "share",
+      "sub_dir_share"
+    ]
+  },
+  "归档": {
+    "synonyms": [
+      "archive",
+      "archive_mode"
+    ]
+  },
+  "同步": {
+    "synonyms": [
+      "sync",
+      "async_sync"
+    ]
+  },
+  "存储池": {
+    "synonyms": [
+      "pool",
+      "storage_pool"
+    ]
+  },
+  "元数据": {
+    "synonyms": [
+      "metadata"
+    ]
+  },
+  "生命周期": {
+    "synonyms": [
+      "lifecycle"
+    ]
+  },
+  "组织": {
+    "synonyms": [
+      "organization",
+      "org"
+    ]
+  },
+  "策略": {
+    "synonyms": [
+      "policy"
+    ]
+  },
+  "缓存": {
+    "synonyms": [
+      "cache",
+      "mcache"
+    ]
+  },
+  "ceph": {
+    "synonyms": [
+      "ceph"
+    ]
+  },
+  "rados": {
+    "synonyms": [
+      "rados"
+    ]
+  },
+  "nfs": {
+    "synonyms": [
+      "nfs",
+      "nfs_share"
+    ]
+  },
+  "cifs": {
+    "synonyms": [
+      "cifs",
+      "cifs_share"
+    ]
+  },
+  "ftp": {
+    "synonyms": [
+      "ftp"
+    ]
+  },
+  "拷贝": {
+    "synonyms": [
+      "copy",
+      "copy_data"
+    ]
+  },
+  "迁移": {
+    "synonyms": [
+      "migrate",
+      "migration"
+    ]
+  },
+  "磁带": {
+    "synonyms": [
+      "tape",
+      "tape_lib"
+    ]
+  },
+  "日志": {
+    "synonyms": [
+      "log"
+    ]
+  },
+  "配置": {
+    "synonyms": [
+      "config"
+    ]
+  },
+  "域": {
+    "synonyms": [
+      "domain",
+      "fault_domain"
+    ]
+  },
+  "区域": {
+    "synonyms": [
+      "zone"
+    ]
+  },
+  "节点": {
+    "synonyms": [
+      "node"
+    ]
+  },
+  "纠删": {
+    "synonyms": [
+      "erasure",
+      "erasure_code"
+    ]
+  },
+  "写": {
+    "synonyms": [
+      "write"
+    ]
+  },
+  "读": {
+    "synonyms": [
+      "read"
+    ]
+  },
+  "角色": {
+    "synonyms": [
+      "role"
+    ]
+  },
+  "认证": {
+    "synonyms": [
+      "auth"
+    ]
+  },
+  "权限": {
+    "synonyms": [
+      "permission"
+    ]
+  },
+  "加密": {
+    "synonyms": [
+      "encryption",
+      "encrypt"
+    ]
+  },
+  "快照": {
+    "synonyms": [
+      "snapshot"
+    ]
+  },
+  "健康检查": {
+    "synonyms": [
+      "health",
+      "health_check"
+    ]
+  },
+  "副本": {
+    "synonyms": [
+      "replication",
+      "replica",
+      "dual_copy"
+    ]
+  },
+  "告警": {
+    "synonyms": [
+      "alarm",
+      "alert"
+    ]
+  },
+  "服务质量": {
+    "synonyms": [
+      "qos",
+      "qos_policy"
+    ]
+  },
+  "事件": {
+    "synonyms": [
+      "event"
+    ]
+  },
+  "备份": {
+    "synonyms": [
+      "backup"
+    ]
+  },
+  "驱动": {
+    "synonyms": [
+      "drive",
+      "driver"
+    ]
+  },
+  "刷盘": {
+    "synonyms": [
+      "flush",
+      "dirty_flush"
+    ]
+  },
+  "命名空间": {
+    "synonyms": [
+      "namespace"
+    ]
+  },
+  "介质": {
+    "synonyms": [
+      "media",
+      "media_pool"
+    ]
+  },
+  "重建": {
+    "synonyms": [
+      "rebuild",
+      "rebuild_task"
+    ]
+  },
+  "审计": {
+    "synonyms": [
+      "audit"
+    ]
+  },
+  "重平衡": {
+    "synonyms": [
+      "rebalance"
+    ]
+  },
+  "分层": {
+    "synonyms": [
+      "tier",
+      "tiering"
+    ]
+  },
+  "sftp": {
+    "synonyms": [
+      "sftp"
+    ]
+  },
+  "降级": {
+    "synonyms": [
+      "degrade"
+    ]
+  },
+  "带宽": {
+    "synonyms": [
+      "bandwidth"
+    ]
+  }
+}

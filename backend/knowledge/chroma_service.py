@@ -2,6 +2,7 @@
 
 import chromadb
 from config import settings
+from rag.config import RAGConfig
 
 
 def get_chroma_client():
@@ -113,52 +114,64 @@ class KnowledgeService:
         """
         client = get_chroma_client()
 
-        # Build combined where filter
-        combined_where = None
-        conditions = []
+        # 共享条件：所有 collection 都生效（source_types / case_types / where）
+        shared_conditions = []
+        # project 条件仅对项目级 collection 生效，对全局知识库（knowledge_base）豁免
+        project_condition = None
 
         if source_types:
             if len(source_types) == 1:
-                conditions.append({'source_type': source_types[0]})
+                shared_conditions.append({'source_type': source_types[0]})
             else:
-                conditions.append({'$or': [{'source_type': st} for st in source_types]})
+                shared_conditions.append({'$or': [{'source_type': st} for st in source_types]})
 
         if case_types:
             if len(case_types) == 1:
-                conditions.append({'case_type': case_types[0]})
+                shared_conditions.append({'case_type': case_types[0]})
             else:
-                conditions.append({'$or': [{'case_type': ct} for ct in case_types]})
+                shared_conditions.append({'$or': [{'case_type': ct} for ct in case_types]})
 
         if project:
-            conditions.append({'project': str(project)})
+            project_condition = {'project': str(project)}
 
         if where:
-            conditions.append(where)
+            shared_conditions.append(where)
 
-        if len(conditions) == 1:
-            combined_where = conditions[0]
-        elif len(conditions) > 1:
-            combined_where = {'$and': conditions}
+        def _build_where(include_project: bool):
+            conds = list(shared_conditions)
+            if include_project and project_condition:
+                conds.append(project_condition)
+            if not conds:
+                return None
+            if len(conds) == 1:
+                return conds[0]
+            return {'$and': conds}
 
         # Determine which collections to search
+        # knowledge_base（RAG 主库，含代码图谱/历史设计/历史测试设计）是全局共享，不绑 project
         if collection_name:
-            collections_to_search = [collection_name]
+            cols = [(collection_name, collection_name == RAGConfig.COLLECTION)]
         else:
-            collections_to_search = ['documents', 'test_patterns']
+            cols = [
+                ('documents', False),          # 项目级：project 过滤生效
+                ('test_patterns', False),      # 项目级：project 过滤生效
+                (RAGConfig.COLLECTION, True),  # 全局级：project 过滤豁免
+            ]
 
         # Over-fetch for rerank (3x)
         fetch_n = n_results * 3 if settings.RERANK_ENABLED else n_results
 
         all_results = []
-        for col_name in collections_to_search:
+        for col_name, is_global in cols:
             try:
                 collection = client.get_collection(col_name)
                 kwargs = {
                     'query_embeddings': [query_embedding],
                     'n_results': fetch_n,
                 }
-                if combined_where:
-                    kwargs['where'] = combined_where
+                w = _build_where(include_project=not is_global)
+                if w:
+                    kwargs['where'] = w
                 results = collection.query(**kwargs)
                 for i, doc in enumerate(results['documents'][0]):
                     all_results.append({
